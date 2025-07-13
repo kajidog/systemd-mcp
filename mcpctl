@@ -7,75 +7,72 @@ import sys
 import json
 
 # --- 設定 ---
-# デーモンが使用するソケットファイルのパス
-SOCKET_PATH = "/run/mcp_manager.sock"
+SOCKET_PATH = "/tmp/mcp_manager.sock"
 # ---
 
 def main():
-    """
-    コマンドライン引数を解釈し、デーモンにコマンドを送信する
-    """
     parser = argparse.ArgumentParser(
         description="MCPサーバー管理デーモンを操作するコマンドラインツール",
         formatter_class=argparse.RawTextHelpFormatter
     )
-    # サブコマンドを定義
     subparsers = parser.add_subparsers(dest='command', required=True, help='実行するコマンド')
 
     # 'status' コマンド
-    parser_status = subparsers.add_parser(
-        'status',
-        help='現在管理されている全サーバーの状態を表示します'
-    )
+    subparsers.add_parser('status', help='全サーバーの状態を表示します')
+
+    # 'start' コマンド
+    parser_start = subparsers.add_parser('start', help='指定したIDのサーバーを起動します')
+    parser_start.add_argument('server_id', help='起動するサーバーのID')
+
+    # 'stop' コマンド
+    parser_stop = subparsers.add_parser('stop', help='指定したIDのサーバーを停止します')
+    parser_stop.add_argument('server_id', help='停止するサーバーのID')
 
     # 'restart' コマンド
-    parser_restart = subparsers.add_parser(
-        'restart',
-        help='指定されたサーバーを再起動します (IDで指定)'
-    )
-    parser_restart.add_argument(
-        'server_id',
-        nargs='+', # 1つ以上の引数をリストとして受け取る
-        help='再起動するサーバーのID (設定ファイルのコマンド全体を引用符で囲んで指定)'
-    )
+    parser_restart = subparsers.add_parser('restart', help='指定したIDのサーバーを再起動します')
+    parser_restart.add_argument('server_id', help='再起動するサーバーのID')
 
-    # 'restart-all' コマンド
-    parser_restart_all = subparsers.add_parser(
-        'restart-all',
-        help='管理されている全てのサーバーを再起動します'
-    )
+    # 'apply' コマンド
+    subparsers.add_parser('apply', help='設定ファイルからすべてのサーバーを読み込んで起動します')
 
     args = parser.parse_args()
 
-    # デーモンに送信するリクエストを作成
-    request = {'command': args.command}
-    if args.command == 'restart':
-        # server_idはリストなので、スペースで連結して単一の文字列にする
-        request['payload'] = " ".join(args.server_id)
+    request = {'command': args.command, 'payload': None}
+    if hasattr(args, 'server_id') and args.command != 'apply':
+        request['payload'] = args.server_id
 
-    # ソケット通信でデーモンに接続
     try:
         with socket.socket(socket.AF_UNIX, socket.SOCK_STREAM) as s:
             s.connect(SOCKET_PATH)
-            # コマンドをJSON形式で送信
             s.sendall(json.dumps(request).encode('utf-8'))
             
-            # レスポンスを受信
-            response_data = s.recv(4096)
+            # レスポンスの受信サイズを大きくする
+            response_data = s.recv(8192)
             if not response_data:
-                print("デーモンから応答がありませんでした。")
+                print("デーモンから応答がありませんでした。", file=sys.stderr)
                 return
 
             response = json.loads(response_data.decode('utf-8'))
 
-            # 結果を表示
             if response.get('status') == 'ok':
-                print(response.get('message', '成功しました。'))
+                if args.command == 'status':
+                    process_list = response.get('payload', [])
+                    if not process_list:
+                        print("設定ファイルにサーバーが定義されていません。")
+                    else:
+                        print(f"{'ID':<8} {'STATUS':<9} {'PID':>7} {'UPTIME':>15} {'COMMAND'}")
+                        print(f"{'-'*8} {'-'*9} {'-'*7} {'-'*15} {'-'*40}")
+                        for p in sorted(process_list, key=lambda x: x['id']):
+                            pid = str(p['pid'])
+                            print(f"{p['id']:<8} {p['status']:<9} {pid:>7} {p['uptime']:>15} {p['command']}")
+                else:
+                    print(response.get('message', '成功しました。'))
             else:
                 print(f"エラー: {response.get('message', '不明なエラー')}", file=sys.stderr)
+                sys.exit(1)
 
     except FileNotFoundError:
-        print(f"エラー: デーモンが実行されていないか、ソケットファイル '{SOCKET_PATH}' が見つかりません。", file=sys.stderr)
+        print(f"エラー: デーモンが実行されていないか、ソケット '{SOCKET_PATH}' が見つかりません。", file=sys.stderr)
         sys.exit(1)
     except ConnectionRefusedError:
         print(f"エラー: デーモンへの接続が拒否されました。デーモンは起動していますか？", file=sys.stderr)
