@@ -95,7 +95,7 @@ if [[ -d "$MCP_CONFIG_DIR" ]]; then
 fi
 
 # 5. Remove socket file
-print_info "Removing temporary files..."
+print_info "Removing socket file..."
 if [[ -S "/tmp/mcp_manager.sock" ]]; then
     rm -f "/tmp/mcp_manager.sock"
     print_success "Socket file removed"
