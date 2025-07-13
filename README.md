@@ -42,62 +42,70 @@ MCP Server Managerは、設定ファイルに基づいて複数のサーバー�
 
 ### 2. 設定
 
-1.  **実行権限の付与**
-    `mcpctl` と `mcp_server.sh` に実行権限を与えます。
-    ```bash
-    chmod +x mcpctl
-    chmod +x mcp_server.sh
-    ```
+1. **実行権限の付与**
+
+  `mcpctl` と `mcp_server.sh` に実行権限を与えます。
+
+  ```bash
+  chmod +x mcpctl
+  chmod +x mcp_server.sh
+  ```
 
 2.  **管理対象プロセスの設定**
-    `mcp_server.conf` を編集し、管理したいサーバープロセスの起動コマンドを記述します。各コマンドは改行で区切ってください。
 
-    **例:**
-    ```
-    # 1つ目のサーバー
-    /path/to/your/server1 --port 8000
+  `mcp_server.conf` を編集し、管理したいサーバープロセスの起動コマンドを記述します。各コマンドは改行で区切ってください。
 
-    # 2つ目のサーバー (このプロジェクトのサンプルスクリプト)
-    /path/to/systemd-mcp/mcp_server.sh
-    ```
+  **例:**
+  ```
+  # 1つ目のサーバー
+  /path/to/your/server1 --port 8000
+
+  # 2つ目のサーバー (このプロジェクトのサンプルスクリプト)
+  /path/to/systemd-mcp/mcp_server.sh
+  ```
 
 3.  **systemdサービスファイルの編集**
-    `mcp-manager.service` ファイルを開き、`ExecStart` と `WorkingDirectory` のパスを、実際のプロジェクトのパスに合わせて修正します。
 
-    **例:**
-    ```ini
-    [Service]
-    ...
-    ExecStart=/usr/bin/python3 /path/to/your/project/mcp_manager.py
-    WorkingDirectory=/path/to/your/project
-    ...
-    ```
+  `mcp-manager.service` ファイルを開き、`ExecStart` と `WorkingDirectory` のパスを、実際のプロジェクトのパスに合わせて修正します。
+
+  **例:**
+  ```ini
+  [Service]
+  ...
+  ExecStart=/usr/bin/python3 /path/to/your/project/mcp_manager.py
+  WorkingDirectory=/path/to/your/project
+  ...
+  ```
 
 ### 3. サービスのインストールと起動
 
 1.  **サービスファイルの配置**
-    編集した `mcp-manager.service` ファイルを systemd のディレクトリにコピーします。
-    ```bash
-    sudo cp mcp-manager.service /etc/systemd/system/
-    ```
+
+  編集した `mcp-manager.service` ファイルを systemd のディレクトリにコピーします。
+  ```bash
+  sudo cp mcp-manager.service /etc/systemd/system/
+  ```
 
 2.  **systemdデーモンのリロード**
-    サービスファイルを配置したら、systemdに新しい設定を認識させます。
-    ```bash
-    sudo systemctl daemon-reload
-    ```
+
+  サービスファイルを配置したら、systemdに新しい設定を認識させます。
+  ```bash
+  sudo systemctl daemon-reload
+  ```
 
 3.  **サービスの起動**
-    以下のコマンドでMCP Server Managerを起動します。
-    ```bash
-    sudo systemctl start mcp-manager.service
-    ```
+
+  以下のコマンドでMCP Server Managerを起動します。
+  ```bash
+  sudo systemctl start mcp-manager.service
+  ```
 
 4.  **（任意）OS起動時の自動起動設定**
-    OSの起動と同時にサービスが自動で開始されるように設定します。
-    ```bash
-    sudo systemctl enable mcp-manager.service
-    ```
+
+   OSの起動と同時にサービスが自動で開始されるように設定します。
+   ```bash
+   sudo systemctl enable mcp-manager.service
+   ```
 
 ## `mcpctl` の使い方
 
@@ -115,12 +123,14 @@ MCP Server Managerは、設定ファイルに基づいて複数のサーバー�
   ```
 
 - **特定のサーバーを再起動:**
+
   再起動したいサーバーのコマンド（`mcp_server.conf` に記述したもの）を引数に指定します。
   ```bash
   ./mcpctl restart "/path/to/systemd-mcp/mcp_server.sh"
   ```
 
 - **全てのサーバーを再起動:**
+
   ```bash
   ./mcpctl restart-all
   ```
