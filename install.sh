@@ -85,7 +85,7 @@ SERVICE_FILE="$SYSTEMD_DIR/mcp-manager.service"
 cp "$SCRIPT_DIR/mcp-manager.service" "$SERVICE_FILE"
 
 # Update ExecStart and WorkingDirectory paths to actual installation destination
-sed -i "s|ExecStart=.*mcp_manager.py|ExecStart=$MCP_LIB_DIR/mcp_manager.py|" "$SERVICE_FILE"
+sed -i "s|ExecStart=.*mcp_manager.py|ExecStart=/usr/bin/python3 $MCP_LIB_DIR/mcp_manager.py|" "$SERVICE_FILE"
 sed -i "s|WorkingDirectory=.*|WorkingDirectory=$MCP_LIB_DIR|" "$SERVICE_FILE"
 
 print_success "Updated systemd service file"
