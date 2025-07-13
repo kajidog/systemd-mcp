@@ -6,34 +6,34 @@ import socket
 import sys
 import json
 
-# --- 設定 ---
+# --- Configuration ---
 SOCKET_PATH = "/tmp/mcp_manager.sock"
 # ---
 
 def main():
     parser = argparse.ArgumentParser(
-        description="MCPサーバー管理デーモンを操作するコマンドラインツール",
+        description="Command-line tool for managing MCP server daemon",
         formatter_class=argparse.RawTextHelpFormatter
     )
-    subparsers = parser.add_subparsers(dest='command', required=True, help='実行するコマンド')
+    subparsers = parser.add_subparsers(dest='command', required=True, help='Command to execute')
 
-    # 'status' コマンド
-    subparsers.add_parser('status', help='全サーバーの状態を表示します')
+    # 'status' command
+    subparsers.add_parser('status', help='Display status of all servers')
 
-    # 'start' コマンド
-    parser_start = subparsers.add_parser('start', help='指定したIDのサーバーを起動します')
-    parser_start.add_argument('server_id', help='起動するサーバーのID')
+    # 'start' command
+    parser_start = subparsers.add_parser('start', help='Start server with specified ID')
+    parser_start.add_argument('server_id', help='ID of the server to start')
 
-    # 'stop' コマンド
-    parser_stop = subparsers.add_parser('stop', help='指定したIDのサーバーを停止します')
-    parser_stop.add_argument('server_id', help='停止するサーバーのID')
+    # 'stop' command
+    parser_stop = subparsers.add_parser('stop', help='Stop server with specified ID')
+    parser_stop.add_argument('server_id', help='ID of the server to stop')
 
-    # 'restart' コマンド
-    parser_restart = subparsers.add_parser('restart', help='指定したIDのサーバーを再起動します')
-    parser_restart.add_argument('server_id', help='再起動するサーバーのID')
+    # 'restart' command
+    parser_restart = subparsers.add_parser('restart', help='Restart server with specified ID')
+    parser_restart.add_argument('server_id', help='ID of the server to restart')
 
-    # 'apply' コマンド
-    subparsers.add_parser('apply', help='設定ファイルからすべてのサーバーを読み込んで起動します')
+    # 'apply' command
+    subparsers.add_parser('apply', help='Load configuration file and start all servers')
 
     args = parser.parse_args()
 
@@ -46,10 +46,10 @@ def main():
             s.connect(SOCKET_PATH)
             s.sendall(json.dumps(request).encode('utf-8'))
             
-            # レスポンスの受信サイズを大きくする
+            # Increase response buffer size
             response_data = s.recv(8192)
             if not response_data:
-                print("デーモンから応答がありませんでした。", file=sys.stderr)
+                print("No response received from daemon.", file=sys.stderr)
                 return
 
             response = json.loads(response_data.decode('utf-8'))
@@ -58,7 +58,7 @@ def main():
                 if args.command == 'status':
                     process_list = response.get('payload', [])
                     if not process_list:
-                        print("設定ファイルにサーバーが定義されていません。")
+                        print("No servers are defined in the configuration file.")
                     else:
                         print(f"{'ID':<8} {'STATUS':<9} {'PID':>7} {'UPTIME':>15} {'COMMAND'}")
                         print(f"{'-'*8} {'-'*9} {'-'*7} {'-'*15} {'-'*40}")
@@ -66,19 +66,19 @@ def main():
                             pid = str(p['pid'])
                             print(f"{p['id']:<8} {p['status']:<9} {pid:>7} {p['uptime']:>15} {p['command']}")
                 else:
-                    print(response.get('message', '成功しました。'))
+                    print(response.get('message', 'Success.'))
             else:
-                print(f"エラー: {response.get('message', '不明なエラー')}", file=sys.stderr)
+                print(f"Error: {response.get('message', 'Unknown error')}", file=sys.stderr)
                 sys.exit(1)
 
     except FileNotFoundError:
-        print(f"エラー: デーモンが実行されていないか、ソケット '{SOCKET_PATH}' が見つかりません。", file=sys.stderr)
+        print(f"Error: Daemon is not running or socket '{SOCKET_PATH}' not found.", file=sys.stderr)
         sys.exit(1)
     except ConnectionRefusedError:
-        print(f"エラー: デーモンへの接続が拒否されました。デーモンは起動していますか？", file=sys.stderr)
+        print(f"Error: Connection to daemon was refused. Is the daemon running?", file=sys.stderr)
         sys.exit(1)
     except Exception as e:
-        print(f"予期せぬエラーが発生しました: {e}", file=sys.stderr)
+        print(f"Unexpected error occurred: {e}", file=sys.stderr)
         sys.exit(1)
 
 if __name__ == "__main__":

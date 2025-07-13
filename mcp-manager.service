@@ -1,31 +1,28 @@
 [Unit]
 Description=MCP Server Manager Daemon
-# ネットワークが利用可能になってから起動する場合
+# To start after network is available
 # After=network.target
 
 [Service]
-# デーモンの実行ユーザー
+# Daemon execution user
 # User=myuser
 
-# Pythonデーモンスクリプトの絶対パス
+# Absolute path to Python daemon script
 # ExecStart=/usr/bin/python3 /path/to/your/project/mcp_manager.py
-ExecStart=/usr/bin/python3 /data/systemd-mcp/mcp_manager.py
+ExecStart=/usr/bin/python3 /usr/local/lib/mcp-manager/mcp_manager.py
 
-# デーモンスクリプトがあるディレクトリ
-WorkingDirectory=/data/systemd-mcp
-
-# systemdにプロセスを常に監視させ、異常終了した場合は再起動する
+# Let systemd always monitor the process and restart on abnormal termination
 Restart=always
-# 再起動するまでの待機時間
+# Wait time before restart
 RestartSec=5
 
-# 標準出力と標準エラー出力をsyslog (journald) に記録する
+# Record standard output and standard error to syslog (journald)
 StandardOutput=journal
 StandardError=journal
 
-# 停止シグナルとしてSIGTERMを送信する
+# Send SIGTERM as stop signal
 KillSignal=SIGTERM
 
 [Install]
-#どのターゲットで有効にするか
+# Which target to enable for
 WantedBy=multi-user.target

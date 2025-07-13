@@ -1,9 +1,9 @@
 #!/bin/bash
 # MCP Server Manager Uninstallation Script
 
-set -e  # エラー時に終了
+set -e  # Exit on error
 
-# 色付きの出力関数
+# Colored output functions
 print_info() {
     echo -e "\033[34m[INFO]\033[0m $1"
 }
@@ -20,96 +20,96 @@ print_warning() {
     echo -e "\033[33m[WARNING]\033[0m $1"
 }
 
-# root権限チェック
+# Root permission check
 if [[ $EUID -ne 0 ]]; then
-   print_error "このスクリプトはroot権限で実行する必要があります。"
-   echo "使用方法: sudo $0"
+   print_error "This script must be run with root privileges."
+   echo "Usage: sudo $0"
    exit 1
 fi
 
-print_warning "=== MCP Server Manager アンインストール ==="
+print_warning "=== MCP Server Manager Uninstallation ==="
 echo
 
-# 確認
-read -p "本当にMCP Server Managerをアンインストールしますか？ (y/N): " -n 1 -r
+# Confirmation
+read -p "Are you sure you want to uninstall MCP Server Manager? (y/N): " -n 1 -r
 echo
 if [[ ! $REPLY =~ ^[Yy]$ ]]; then
-    print_info "アンインストールをキャンセルしました"
+    print_info "Uninstallation cancelled"
     exit 0
 fi
 
-# インストール先ディレクトリの定義
+# Installation directory definitions
 MCP_BIN_DIR="/usr/local/bin"
 MCP_LIB_DIR="/usr/local/lib/mcp-manager"
 MCP_CONFIG_DIR="/etc/mcp"
 SYSTEMD_DIR="/etc/systemd/system"
 
-# 1. サービスの停止と無効化
-print_info "mcp-manager.serviceを停止中..."
+# 1. Stop and disable service
+print_info "Stopping mcp-manager.service..."
 if systemctl is-active --quiet mcp-manager.service; then
     systemctl stop mcp-manager.service
-    print_success "サービスを停止しました"
+    print_success "Service stopped"
 fi
 
 if systemctl is-enabled --quiet mcp-manager.service; then
     systemctl disable mcp-manager.service
-    print_success "サービスを無効化しました"
+    print_success "Service disabled"
 fi
 
-# 2. systemdサービスファイルの削除
-print_info "systemdサービスファイルを削除中..."
+# 2. Remove systemd service file
+print_info "Removing systemd service file..."
 if [[ -f "$SYSTEMD_DIR/mcp-manager.service" ]]; then
     rm -f "$SYSTEMD_DIR/mcp-manager.service"
-    print_success "サービスファイルを削除しました"
+    print_success "Service file removed"
 fi
 
-# systemdデーモンの再読み込み
+# Reload systemd daemon
 systemctl daemon-reload
 
-# 3. 実行ファイルの削除
-print_info "実行ファイルを削除中..."
+# 3. Remove executable files
+print_info "Removing executable files..."
 
 # mcpctl
 if [[ -f "$MCP_BIN_DIR/mcpctl" ]]; then
     rm -f "$MCP_BIN_DIR/mcpctl"
-    print_success "mcpctlを削除しました"
+    print_success "mcpctl removed"
 fi
 
-# ライブラリディレクトリ
+# Library directory
 if [[ -d "$MCP_LIB_DIR" ]]; then
     rm -rf "$MCP_LIB_DIR"
-    print_success "ライブラリディレクトリを削除しました"
+    print_success "Library directory removed"
 fi
 
-# 4. 設定ファイルの処理
-print_info "設定ファイルの処理中..."
+# 4. Configuration file handling
+print_info "Processing configuration files..."
 if [[ -d "$MCP_CONFIG_DIR" ]]; then
-    read -p "設定ファイル ($MCP_CONFIG_DIR) も削除しますか？ (y/N): " -n 1 -r
+    read -p "Delete configuration files ($MCP_CONFIG_DIR) as well? (y/N): " -n 1 -r
     echo
     if [[ $REPLY =~ ^[Yy]$ ]]; then
         rm -rf "$MCP_CONFIG_DIR"
-        print_success "設定ディレクトリを削除しました"
+        print_success "Configuration directory removed"
     else
-        print_info "設定ディレクトリは保持されました: $MCP_CONFIG_DIR"
+        print_info "Configuration directory preserved: $MCP_CONFIG_DIR"
     fi
 fi
 
-# 5. ソケットファイルの削除
-print_info "一時ファイルを削除中..."
+# 5. Remove socket file
+print_info "Removing socket file..."
 if [[ -S "/tmp/mcp_manager.sock" ]]; then
     rm -f "/tmp/mcp_manager.sock"
-    print_success "ソケットファイルを削除しました"
+    print_success "Socket file removed"
 fi
 
-# 6. 完了メッセージ
+# 6. Completion message
 echo
-print_success "=== アンインストールが完了しました ==="
+print_success "=== Uninstallation completed ==="
 echo
 
 if [[ -d "$MCP_CONFIG_DIR" ]]; then
-    print_info "設定ファイルが残っています: $MCP_CONFIG_DIR"
-    print_info "必要に応じて手動で削除してください"
+    print_info "Configuration files remain: $MCP_CONFIG_DIR"
+    print_info "Please remove manually if needed"
 fi
 
 echo
-print_info "MCP Server Managerのアンインストールが完了しました"
+print_info "MCP Server Manager uninstallation completed"
