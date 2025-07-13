@@ -1,111 +1,111 @@
 # MCP Server Manager
 
-## 概要
+## Overview
 
-MCP Server Managerは、設定ファイル `mcp_server.conf` に基づいて複数のサーバープロセスを管理（起動、停止、監視、自動再起動）するためのデーモンツールです。
+MCP Server Manager is a daemon tool for managing multiple server processes (startup, shutdown, monitoring, and automatic restart) based on the configuration file `mcp_server.conf`.
 
-各サーバープロセスには、その起動コマンドから一意のIDが自動的に割り当てられます。`mcpctl` コマンドラインツールを使用することで、このIDを指定して個別のサーバーを操作できます。
+Each server process is automatically assigned a unique ID based on its startup command. Using the `mcpctl` command-line tool, you can operate individual servers by specifying their IDs.
 
-`systemd` サービスとして動作し、意図せず終了したプロセスを自動で再起動することで、サービスの可用性を高めます。
+It operates as a `systemd` service and enhances service availability by automatically restarting processes that terminate unexpectedly.
 
-## 主な機能
+## Key Features
 
-- **シンプルな設定ファイル:** 管理したいサーバーのコマンドを `mcp_server.conf` に記述するだけで利用できます。
-- **IDの自動生成:** 各サーバーコマンドに対して、内容に基づいたユニークなID（ハッシュ）が自動で割り当てられます。
-- **コマンドラインからの操作:** `mcpctl` を使い、`status` でIDを確認し、`start`, `stop`, `restart` で各サーバーを個別に操作できます。
-- **プロセスの自動再起動:** `mcpctl stop` 以外でプロセスが終了した場合、デーモンが自動的に再起動します。
-- **systemd連携:** `mcp-manager.service` を使って簡単にサービスとして登録できます。
+- **Simple Configuration File:** Simply describe the commands of servers you want to manage in `mcp_server.conf`.
+- **Automatic ID Generation:** Each server command is automatically assigned a unique ID (hash) based on its content.
+- **Command-line Operations:** Use `mcpctl` to check IDs with `status` and operate individual servers with `start`, `stop`, and `restart`.
+- **Automatic Process Restart:** When a process terminates for reasons other than `mcpctl stop`, the daemon automatically restarts it.
+- **systemd Integration:** Easy service registration using `mcp-manager.service`.
 
-## ワークフロー
+## Workflow
 
-1.  **設定:** `/etc/mcp/mcp_server.conf` を編集して、管理したいサーバーの起動コマンドを1行ずつ記述します。
-2.  **リロード:** `sudo systemctl restart mcp-manager.service` を実行して、設定の変更をデーモンに反映させます。
-3.  **確認:** `mcpctl status` を実行して、各サーバーの状態と自動生成されたIDを確認します。
-4.  **操作:** 確認したIDを使って、`mcpctl start <ID>` や `mcpctl stop <ID>` などのコマンドで個別のサーバーを管理します。
+1. **Configuration:** Edit `/etc/mcp/mcp_server.conf` to describe the startup commands of servers you want to manage, one per line.
+2. **Reload:** Execute `sudo systemctl restart mcp-manager.service` to reflect configuration changes to the daemon.
+3. **Check:** Run `mcpctl status` to check the status and automatically generated IDs of each server.
+4. **Operations:** Use the confirmed IDs with commands like `mcpctl start <ID>` or `mcpctl stop <ID>` to manage individual servers.
 
-## セットアップとインストール
+## Setup and Installation
 
-### 自動インストール（推奨）
+### Automatic Installation (Recommended)
 
-1. **インストールスクリプトの実行**
+1. **Run the Installation Script**
    ```bash
    sudo ./install.sh
    ```
    
-   このスクリプトは以下の処理を自動で行います：
-   - 必要なディレクトリの作成（`/usr/local/bin/mcp-manager/`、`/etc/mcp/`）
-   - `mcp_manager.py`を`/usr/local/bin/mcp-manager/`にコピー
-   - `mcpctl`を`/usr/local/bin/`にコピー（PATHに追加）
-   - 設定ファイル`mcp_server.conf`を`/etc/mcp/`にコピー
-   - systemdサービスファイルのインストールと登録
-   - サービスの起動と自動起動の有効化
+   This script automatically performs the following tasks:
+   - Creates necessary directories (`/usr/local/lib/mcp-manager/`, `/etc/mcp/`)
+   - Copies `mcp_manager.py` to `/usr/local/lib/mcp-manager/`
+   - Copies `mcpctl` to `/usr/local/bin/` (adds to PATH)
+   - Copies configuration file `mcp_server.conf` to `/etc/mcp/`
+   - Installs and registers systemd service file
+   - Starts the service and enables automatic startup
 
-2. **インストール完了後の確認**
+2. **Verify Installation**
    ```bash
    mcpctl status
    ```
 
-### 手動インストール
+### Manual Installation
 
-手動でインストールする場合は、以下の手順を実行してください：
+For manual installation, follow these steps:
 
-1.  **実行権限の付与**
-    プロジェクト内のスクリプトに実行権限を与えます。
-    ```bash
-    chmod +x mcp_manager.py mcpctl mcp_server.sh install.sh uninstall.sh
-    ```
+1. **Grant Execute Permissions**
+   Grant execute permissions to scripts in the project.
+   ```bash
+   chmod +x mcp_manager.py mcpctl mcp_server.sh install.sh uninstall.sh
+   ```
 
-2.  **ディレクトリの作成**
-    ```bash
-    sudo mkdir -p /usr/local/lib/mcp-manager
-    sudo mkdir -p /etc/mcp
-    ```
+2. **Create Directories**
+   ```bash
+   sudo mkdir -p /usr/local/lib/mcp-manager
+   sudo mkdir -p /etc/mcp
+   ```
 
-3.  **ファイルの配置**
-    ```bash
-    sudo cp mcp_manager.py /usr/local/lib/mcp-manager/
-    sudo cp mcpctl /usr/local/bin/
-    sudo cp mcp_server.conf /etc/mcp/mcp_server.conf
-    ```
+3. **Deploy Files**
+   ```bash
+   sudo cp mcp_manager.py /usr/local/lib/mcp-manager/
+   sudo cp mcpctl /usr/local/bin/
+   sudo cp mcp_server.conf /etc/mcp/mcp_server.conf
+   ```
 
-4.  **設定ファイルの編集**
-    必要に応じて設定ファイルを編集してください。
-    ```bash
-    sudo vi /etc/mcp/mcp_server.conf
-    ```
+4. **Edit Configuration File**
+   Edit the configuration file as needed.
+   ```bash
+   sudo vi /etc/mcp/mcp_server.conf
+   ```
 
-5.  **systemdサービスファイルの確認と起動**
-    `mcp-manager.service`を開き、パスが正しいことを確認してください。
-    その後、以下のようにサービスを起動します。
-    ```bash
-    sudo cp mcp-manager.service /etc/systemd/system/
-    sudo systemctl daemon-reload
-    sudo systemctl start mcp-manager.service
-    sudo systemctl enable mcp-manager.service
-    ```
+5. **Verify and Start systemd Service File**
+   Open `mcp-manager.service` and verify the paths are correct.
+   Then start the service as follows:
+   ```bash
+   sudo cp mcp-manager.service /etc/systemd/system/
+   sudo systemctl daemon-reload
+   sudo systemctl start mcp-manager.service
+   sudo systemctl enable mcp-manager.service
+   ```
 
-## アンインストール
+## Uninstallation
 
-システムからMCP Server Managerを完全に削除するには：
+To completely remove MCP Server Manager from the system:
 
 ```bash
 sudo ./uninstall.sh
 ```
 
-このスクリプトは以下の処理を行います：
-- systemdサービスの停止と無効化
-- サービスファイルの削除
-- インストールされたファイルの削除
-- 設定ファイルの削除（確認付き）
+This script performs the following tasks:
+- Stops and disables the systemd service
+- Removes service files
+- Removes installed files
+- Removes configuration files (with confirmation)
 
-## `mcpctl` の使い方
+## Using `mcpctl`
 
-- **状態を確認する:**
-  `mcp_server.conf` に記述された全てのサーバーの状態とIDを表示します。
+- **Check Status:**
+  Displays the status and IDs of all servers described in `mcp_server.conf`.
   ```bash
   mcpctl status
   ```
-  **出力例:**
+  **Example Output:**
   ```
   ID       STATUS    PID          UPTIME COMMAND
   -------- --------- ------- --------------- --------------------------------
@@ -113,26 +113,26 @@ sudo ./uninstall.sh
   e4f5g6h  Stopped     N/A             N/A /usr/bin/python3 /path/to/another/server
   ```
 
-- **サーバーを起動する:**
-  IDを使って、停止中 (`Stopped`) または待機中 (`Idle`) のサーバーを起動します。
+- **Start Server:**
+  Use ID to start a stopped (`Stopped`) or idle (`Idle`) server.
   ```bash
   mcpctl start e4f5g6h
   ```
 
-- **設定ファイルからすべてのサーバーを起動する:**
-  設定ファイルを再読み込みして、すべてのサーバーを起動します。
+- **Start All Servers from Configuration File:**
+  Reload the configuration file and start all servers.
   ```bash
   mcpctl apply
   ```
 
-- **サーバーを停止する:**
-  IDを使って、実行中 (`Running`) のサーバーを停止します。この方法で停止したサーバーは、自動再起動の対象外となります。
+- **Stop Server:**
+  Use ID to stop a running (`Running`) server. Servers stopped this way are excluded from automatic restart.
   ```bash
   mcpctl stop a1b2c3d
   ```
 
-- **サーバーを再起動する:**
-  IDを使って、実行中のサーバーを再起動します。
+- **Restart Server:**
+  Use ID to restart a running server.
   ```bash
   mcpctl restart a1b2c3d
   ```
