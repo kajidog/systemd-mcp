@@ -68,6 +68,7 @@ print_info "Setting up configuration file..."
 if [[ ! -f "$MCP_CONFIG_DIR/mcp_server.conf" ]]; then
     cp "$SCRIPT_DIR/mcp_server.conf" "$MCP_CONFIG_DIR/"
     print_success "Configuration file copied: $MCP_CONFIG_DIR/mcp_server.conf"
+    print_info "Edit the configuration file to add your servers: sudo nano $MCP_CONFIG_DIR/mcp_server.conf"
 else
     print_warning "Configuration file already exists: $MCP_CONFIG_DIR/mcp_server.conf"
     print_info "Creating backup before update..."
@@ -93,16 +94,20 @@ print_success "Updated systemd service file"
 print_info "Reloading systemd daemon..."
 systemctl daemon-reload
 
-# 6. Service enablement (optional)
-read -p "Enable mcp-manager.service for automatic startup? (y/N): " -n 1 -r
+# 6. Service enablement (with confirmation)
+read -p "Enable mcp-manager.service for automatic startup? (Y/n): " -n 1 -r
 echo
-if [[ $REPLY =~ ^[Yy]$ ]]; then
+if [[ $REPLY =~ ^[Nn]$ ]]; then
+    print_info "Service not enabled. You can enable it later with: sudo systemctl enable mcp-manager.service"
+else
     systemctl enable mcp-manager.service
     print_success "mcp-manager.service has been enabled"
     
-    read -p "Start the service now? (y/N): " -n 1 -r
+    read -p "Start the service now? (Y/n): " -n 1 -r
     echo
-    if [[ $REPLY =~ ^[Yy]$ ]]; then
+    if [[ $REPLY =~ ^[Nn]$ ]]; then
+        print_info "Service not started. You can start it later with: sudo systemctl start mcp-manager.service"
+    else
         systemctl start mcp-manager.service
         print_success "mcp-manager.service has been started"
         

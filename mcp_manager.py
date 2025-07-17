@@ -26,8 +26,10 @@ stopped_processes = {} # {server_id: {'command': list}}
 configured_servers = {} # {server_id: command_list}
 process_lock = threading.Lock()
 
-def get_id_from_command(command_list):
-    """Generate hash-based ID from command list"""
+def get_id_from_command(command_list, custom_id=None):
+    """Generate hash-based ID from command list or use custom ID"""
+    if custom_id:
+        return custom_id
     command_str = ' '.join(command_list)
     return hashlib.sha1(command_str.encode()).hexdigest()[:7]
 
@@ -42,14 +44,40 @@ def load_servers_from_conf():
     """Load servers from configuration file and update global variables"""
     global configured_servers
     servers = {}
+    used_ids = set()
     
     try:
         with open(MCP_SERVER_CONFIG_FILE, 'r') as f:
-            for line in f:
+            for line_num, line in enumerate(f, 1):
                 line = line.strip()
                 if line and not line.startswith('#'):
-                    command_list = shlex.split(line)
-                    server_id = get_id_from_command(command_list)
+                    custom_id = None
+                    
+                    # Check for id= prefix
+                    if line.startswith('id='):
+                        parts = line.split(' ', 1)
+                        if len(parts) == 2:
+                            custom_id = parts[0][3:]  # Remove 'id=' prefix
+                            line = parts[1]
+                        else:
+                            print(f"[{os.path.basename(__file__)}] Warning: Invalid id format at line {line_num}", file=sys.stderr)
+                            continue
+                    
+                    try:
+                        command_list = shlex.split(line)
+                        if not command_list:  # Skip empty commands
+                            continue
+                        server_id = get_id_from_command(command_list, custom_id)
+                    except ValueError as e:
+                        print(f"[{os.path.basename(__file__)}] Warning: Invalid command format at line {line_num}: {e}", file=sys.stderr)
+                        continue
+                    
+                    # Check for duplicate IDs
+                    if server_id in used_ids:
+                        print(f"[{os.path.basename(__file__)}] Warning: Duplicate ID '{server_id}' at line {line_num}", file=sys.stderr)
+                        continue
+                    
+                    used_ids.add(server_id)
                     servers[server_id] = command_list
     except FileNotFoundError:
         print(f"[{os.path.basename(__file__)}] Configuration file '{MCP_SERVER_CONFIG_FILE}' not found.", file=sys.stderr)
