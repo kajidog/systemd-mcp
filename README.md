@@ -11,7 +11,7 @@ It operates as a `systemd` service and enhances service availability by automati
 ## Key Features
 
 - **Simple Configuration File:** Simply describe the commands of servers you want to manage in `mcp_server.conf`.
-- **Automatic ID Generation:** Each server command is automatically assigned a unique ID (hash) based on its content.
+- **Flexible ID Management:** Each server command is automatically assigned a unique ID (hash) based on its content, or you can specify custom IDs.
 - **Command-line Operations:** Use `mcpctl` to check IDs with `status` and operate individual servers with `start`, `stop`, and `restart`.
 - **Automatic Process Restart:** When a process terminates for reasons other than `mcpctl stop`, the daemon automatically restarts it.
 - **systemd Integration:** Easy service registration using `mcp-manager.service`.
@@ -36,14 +36,16 @@ It operates as a `systemd` service and enhances service availability by automati
    - Creates necessary directories (`/usr/local/lib/mcp-manager/`, `/etc/mcp/`)
    - Copies `mcp_manager.py` to `/usr/local/lib/mcp-manager/`
    - Copies `mcpctl` to `/usr/local/bin/` (adds to PATH)
-   - Copies configuration file `mcp_server.conf` to `/etc/mcp/`
+   - Copies configuration file with examples to `/etc/mcp/mcp_server.conf`
    - Installs and registers systemd service file
-   - Starts the service and enables automatic startup
+   - Prompts to enable and start the service (defaults to Yes)
 
 2. **Verify Installation**
    ```bash
    mcpctl status
    ```
+   
+   If the service is running, you should see "No servers are defined in the configuration file." (normal for fresh install)
 
 ### Manual Installation
 
@@ -66,12 +68,21 @@ For manual installation, follow these steps:
    sudo cp mcp_manager.py /usr/local/lib/mcp-manager/
    sudo cp mcpctl /usr/local/bin/
    sudo cp mcp_server.conf /etc/mcp/mcp_server.conf
+   
    ```
 
 4. **Edit Configuration File**
-   Edit the configuration file as needed.
+   The configuration file includes sample configurations that you can uncomment and modify:
    ```bash
-   sudo vi /etc/mcp/mcp_server.conf
+   sudo nano /etc/mcp/mcp_server.conf
+   ```
+   
+   **Sample configurations included:**
+   ```
+   # id=web-server /usr/bin/python3 -m http.server 8080
+   # id=api-server node /path/to/api/server.js --port 3000
+   # /usr/bin/python3 /path/to/worker.py  # Auto-generated hash ID
+   # id=database redis-server /etc/redis/redis.conf
    ```
 
 5. **Verify and Start systemd Service File**
