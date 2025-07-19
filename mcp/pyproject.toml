@@ -1,0 +1,24 @@
+[project]
+name = "systemd-mcp-server"
+version = "0.1.0"
+description = "MCP server for systemd service management"
+authors = [
+    {name = "systemd-mcp", email = "admin@example.com"}
+]
+dependencies = [
+    "mcp[cli]>=0.5.0",
+    "uvicorn>=0.30.0",
+    "starlette>=0.47.0",
+]
+requires-python = ">=3.10"
+
+[build-system]
+requires = ["hatchling"]
+build-backend = "hatchling.build"
+
+[tool.hatch.build.targets.wheel]
+packages = ["."]
+
+
+[project.scripts]
+systemd-mcp-server = "main:main"
