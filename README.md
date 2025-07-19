@@ -27,7 +27,7 @@ It operates as a `systemd` service and enhances service availability by automati
 
 ### Automatic Installation (Recommended)
 
-1. **Run the Installation Script**
+1. **Install systemd-mcp Manager**
    ```bash
    sudo ./install.sh
    ```
@@ -40,7 +40,15 @@ It operates as a `systemd` service and enhances service availability by automati
    - Installs and registers systemd service file
    - Prompts to enable and start the service (defaults to Yes)
 
-2. **Verify Installation**
+2. **Optional: Install MCP Server for AI Integration**
+   ```bash
+   cd mcp
+   sudo ./install.sh
+   ```
+   
+   This provides systemd control tools for AI assistants like Claude Desktop.
+
+3. **Verify Installation**
    ```bash
    mcpctl status
    ```
